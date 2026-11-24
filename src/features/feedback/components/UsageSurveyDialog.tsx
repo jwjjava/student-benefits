@@ -13,7 +13,9 @@ type Step = "closed" | "ask" | "knew";
  * 외부 신청 페이지에 다녀온 뒤 이 상세로 돌아오면 '혜택을 이용하셨나요?'를 묻는다. (POP-01)
  * 자기보고 응답이며 자동 이용 검증은 하지 않는다.
  */
-export function UsageSurveyDialog({ benefitId }: { benefitId: string }) {
+type UsageSurveyDialogProps = { benefitId: string; benefitTitle: string };
+
+export function UsageSurveyDialog({ benefitId, benefitTitle }: UsageSurveyDialogProps) {
   const [step, setStep] = useState<Step>("closed");
 
   useEffect(() => {
@@ -56,6 +58,8 @@ export function UsageSurveyDialog({ benefitId }: { benefitId: string }) {
       // 응답이 성공 지표라서 배경 클릭으로는 닫지 않는다. Esc나 '나중에 답할게요'로만 닫힌다.
       dismissOnBackdrop={false}
     >
+      {/* POP-01: 어떤 혜택에 대한 질문인지 대상 혜택명을 보여 준다. */}
+      <p className="mb-1.5 line-clamp-2 text-[13px] font-medium text-accent">{benefitTitle}</p>
       {step === "knew" ? (
         <>
           <h2 id="usage-survey-title" className="text-[17px] font-bold text-ink">

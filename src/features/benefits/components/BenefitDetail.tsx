@@ -105,7 +105,7 @@ export function BenefitDetail({ benefit }: { benefit: BenefitView }) {
 
       <ApplyBar benefitId={benefit.id} applyUrl={benefit.applyUrl} closed={closed} />
       <RecordRecentView benefitId={benefit.id} />
-      {closed ? null : <UsageSurveyDialog benefitId={benefit.id} />}
+      {closed ? null : <UsageSurveyDialog benefitId={benefit.id} benefitTitle={benefit.title} />}
     </>
   );
 }
