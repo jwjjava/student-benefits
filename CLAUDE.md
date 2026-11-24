@@ -94,6 +94,15 @@
 - 패키지 매니저: **npm** (이 PC에 pnpm이 없어 npm으로 정했다)
 - 배포: Vercel
 
+### 저장소·배포
+
+- GitHub: `jwjjava/student-benefits` (비공개). 기본 브랜치 `main`.
+- Vercel: 팀 `jwj3`, 프로젝트 `student-benefits`, 프로덕션 https://student-benefits-ten.vercel.app
+  - GitHub 연동으로 `main`에 푸시하면 프로덕션, 다른 브랜치는 프리뷰로 자동 배포된다.
+  - 환경변수 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`는 Vercel 프로젝트 설정에 있다.
+  - 이 PC는 컴퓨터 이름이 한글이라 Vercel CLI 로그인이 실패한다. 배포 설정은 대시보드에서 한다.
+- GitHub CLI는 `C:\Program Files\GitHub CLI\gh.exe`에 있다(PATH에 없을 수 있음).
+
 새 라이브러리는 꼭 필요할 때만 추가하고, 추가할 때는 이유를 PR이나 커밋 메시지에 적는다.
 
 ### 명령
