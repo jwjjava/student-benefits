@@ -1,0 +1,22 @@
+-- 자동 생성 파일: scripts/generate-seed.mjs 로 다시 만든다. 직접 고치지 않는다.
+-- 디자인 시안 예시 데이터(검수 전). 모두 비공개로 들어간다.
+
+insert into public.categories (id, name, sort_order) values
+  ('food', '음식점', 10),
+  ('subscription', '구독', 20),
+  ('it', 'IT', 30),
+  ('beauty', '뷰티', 40)
+on conflict (id) do update set name = excluded.name, sort_order = excluded.sort_order;
+
+insert into public.benefits (id, slug, title, provider, category_id, card_note, eligibility, usage_method, start_date, end_date, is_always_open, apply_url, source_name, source_url, logo_url, image_url, place_name, latitude, longitude, tags, recommend_rank, is_published, verified_at) values
+  ('0b1c6f0e-2f7a-4c55-9a51-000000000001', 'vertex-chicken-rice-15', '치킨덮밥 15% 할인', '버텍스 한양대에리카점', 'food', '매장 방문', array['한양대학교 ERICA 재학생', '학생증 소지자']::text[], '평일 11:00–14:00, 주문 전 학생증을 보여주세요.', '2026-09-01', '2026-12-18', false, 'https://example.com/vertex', '디자인 시안 예시', 'https://example.com/vertex', null, null, '버텍스 한양대에리카점', 37.29845, 126.83585, array['덮밥', '점심', '학생증']::text[], 10, false, null),
+  ('0b1c6f0e-2f7a-4c55-9a51-000000000002', 'notion-plus-free', '개인 플러스 플랜 무료', 'Notion', 'subscription', '학교 이메일 · 1인 워크스페이스', array['학교 이메일(.ac.kr) 보유 학생']::text[], '학교 이메일로 가입한 뒤 설정에서 교육 플랜을 신청하세요.', null, null, true, 'https://www.notion.com/product/notion-for-education', 'Notion 교육용 페이지', 'https://www.notion.com/product/notion-for-education', null, null, null, null, null, array['노션', '메모', '생산성']::text[], 20, false, null),
+  ('0b1c6f0e-2f7a-4c55-9a51-000000000003', 'figma-education-free', '교육 플랜 무료', 'Figma', 'it', '학생·교사 인증', array['재학생', '교사']::text[], 'Figma 교육 인증을 신청하고 승인되면 교육 플랜이 적용돼요.', null, null, true, 'https://www.figma.com/education/', 'Figma Education', 'https://www.figma.com/education/', null, null, null, null, null, array['피그마', '디자인']::text[], 30, false, null),
+  ('0b1c6f0e-2f7a-4c55-9a51-000000000004', 'ediya-latte-1000', '카페라테 1,000원 할인', '이디야커피 안산한대점', 'food', '매장 주문', array['학생증 소지자']::text[], '주문할 때 학생증을 보여주세요.', '2026-09-01', '2026-12-31', false, 'https://example.com/ediya', '디자인 시안 예시', 'https://example.com/ediya', null, null, '이디야커피 안산한대점', 37.29935, 126.83745, array['커피', '카페']::text[], 40, false, null),
+  ('0b1c6f0e-2f7a-4c55-9a51-000000000005', 'github-student-pack', '학생 개발자 팩', 'GitHub', 'it', '재학생 인증 · 개발 도구', array['재학생']::text[], 'GitHub Education에서 재학 증명을 제출하면 개발 도구 혜택을 받을 수 있어요.', null, null, true, 'https://education.github.com/pack', 'GitHub Education', 'https://education.github.com/pack', null, null, null, null, null, array['깃허브', '개발', '코딩']::text[], 50, false, null),
+  ('0b1c6f0e-2f7a-4c55-9a51-000000000006', 'roundlab-dokdo-toner-10', '독도 토너 10% 할인', '라운드랩', 'beauty', '온라인 쿠폰', array['대학생']::text[], '공식몰에서 학생 쿠폰을 받은 뒤 결제할 때 적용하세요.', '2026-10-01', '2026-11-30', false, 'https://example.com/roundlab', '디자인 시안 예시', 'https://example.com/roundlab', null, null, null, null, null, array['토너', '스킨케어']::text[], 60, false, null),
+  ('0b1c6f0e-2f7a-4c55-9a51-000000000007', 'figma-education-team', '교육용 팀 이용', 'Figma', 'it', '교육 자격 인증', array['교육 자격 인증을 받은 학생·교사']::text[], '교육 인증 후 팀을 만들면 교육용 팀으로 이용할 수 있어요.', null, null, true, 'https://www.figma.com/education/', 'Figma Education', 'https://www.figma.com/education/', null, null, null, null, null, array['피그마', '팀']::text[], 70, false, null),
+  ('0b1c6f0e-2f7a-4c55-9a51-000000000008', 'github-copilot-student', 'Copilot 학생용', 'GitHub', 'it', '재학생 인증', array['GitHub Education 인증 학생']::text[], '학생 개발자 팩 인증 후 Copilot 설정에서 학생용 혜택을 켜세요.', null, null, true, 'https://github.com/features/copilot', 'GitHub Copilot', 'https://github.com/features/copilot', null, null, null, null, null, array['코파일럿', 'AI', '개발']::text[], 80, false, null),
+  ('0b1c6f0e-2f7a-4c55-9a51-000000000009', 'vertex-chicken-rice-takeout', '치킨덮밥 포장 할인', '버텍스 한양대에리카점', 'food', '포장 주문', array['학생증 소지자']::text[], '포장 주문할 때 학생증을 보여주세요.', '2026-09-01', '2026-12-18', false, 'https://example.com/vertex', '디자인 시안 예시', 'https://example.com/vertex', null, null, '버텍스 한양대에리카점', 37.29845, 126.83585, array['덮밥', '포장']::text[], 90, false, null),
+  ('0b1c6f0e-2f7a-4c55-9a51-000000000010', 'ediya-americano', '아메리카노 할인', '이디야커피 안산한대점', 'food', '매장 주문', array['학생증 소지자']::text[], '주문할 때 학생증을 보여주세요.', '2026-09-01', '2026-11-15', false, 'https://example.com/ediya', '디자인 시안 예시', 'https://example.com/ediya', null, null, '이디야커피 안산한대점', 37.29935, 126.83745, array['커피', '카페']::text[], 100, false, null)
+on conflict (id) do nothing;

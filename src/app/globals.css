@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* 디자인 가이드(Figma [디자인] UI · 디자인 가이드) 토큰 */
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+
+  --color-brand: #465cf5; /* 워드마크/버튼/선택 */
+  --color-accent: #3789f5; /* 카테고리/강조 */
+  --color-like: #ed3134; /* 찜 활성 */
+  --color-ink: #232632; /* 기본 텍스트 */
+  --color-ink-list: #34373e; /* 목록 텍스트 */
+  --color-sub: #626b7b; /* 보조 텍스트/업체 정보 */
+  --color-icon: #000000; /* 시스템 아이콘 */
+  --color-canvas: #f7f8fb; /* 화면 배경 */
+  --color-surface: #ffffff; /* 팝업 배경 */
+  --color-field: #e9ebf2; /* 검색 필드/구분선/썸네일 */
+
+  --tracking-title: -0.01em;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: #eceef4;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
