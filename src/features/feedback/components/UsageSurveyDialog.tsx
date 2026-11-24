@@ -49,7 +49,13 @@ export function UsageSurveyDialog({ benefitId }: { benefitId: string }) {
   };
 
   return (
-    <Dialog open={step !== "closed"} onClose={later} labelledBy="usage-survey-title">
+    <Dialog
+      open={step !== "closed"}
+      onClose={later}
+      labelledBy="usage-survey-title"
+      // 응답이 성공 지표라서 배경 클릭으로는 닫지 않는다. Esc나 '나중에 답할게요'로만 닫힌다.
+      dismissOnBackdrop={false}
+    >
       {step === "knew" ? (
         <>
           <h2 id="usage-survey-title" className="text-[17px] font-bold text-ink">
