@@ -3,12 +3,12 @@ import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SampleDataBanner } from "@/features/benefits/components/SampleDataBanner";
 import { SearchView, SearchViewFromUrl } from "@/features/benefits/components/SearchView";
-import { getCatalog } from "@/features/benefits/data";
+import { getDiscoveryCatalog } from "@/features/benefits/data";
 
 export const metadata: Metadata = { title: "혜택 검색" };
 
 export default async function SearchPage() {
-  const catalog = await getCatalog();
+  const catalog = await getDiscoveryCatalog();
 
   return (
     <>
