@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "ERICA 학생 혜택",
+    "slug": "erica-benefits",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F7F8FB",
+    "web": { "bundler": "metro" }
+  }
+}
