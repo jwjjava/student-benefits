@@ -8,11 +8,11 @@ import {
   DEFAULT_EXPLORER_PARAMS,
 } from "@/features/benefits/components/BenefitExplorer";
 import { SampleDataBanner } from "@/features/benefits/components/SampleDataBanner";
-import { getCatalog } from "@/features/benefits/data";
+import { getDiscoveryCatalog } from "@/features/benefits/data";
 import { SITE_NAME } from "@/lib/site";
 
 export default async function HomePage() {
-  const catalog = await getCatalog();
+  const catalog = await getDiscoveryCatalog();
 
   return (
     <>

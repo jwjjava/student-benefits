@@ -3,6 +3,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { createServerSupabase } from "@/lib/supabase/server";
 import sampleFile from "../../../supabase/sample-benefits.json";
 import { getPeriodStatus, todayInSeoul } from "./period";
+import { excludeClosed } from "./search";
 import {
   benefitRowSchema,
   categoryRowSchema,
@@ -41,6 +42,12 @@ export async function getCatalog(): Promise<Catalog> {
   return { categories, benefits: views, isSample };
 }
 
+/** 홈과 검색에 전달할 카탈로그. 종료된 혜택의 상세 조회는 getCatalog를 사용한다. */
+export async function getDiscoveryCatalog(): Promise<Catalog> {
+  const catalog = await getCatalog();
+  return { ...catalog, benefits: excludeClosed(catalog.benefits) };
+}
+
 export async function getBenefitBySlug(slug: string): Promise<BenefitView | null> {
   const { benefits } = await getCatalog();
   return benefits.find((b) => b.slug === slug) ?? null;
@@ -77,6 +84,7 @@ async function loadFromSupabase(
 
   // 형식이 잘못된 혜택 한 건 때문에 사이트 전체가 깨지지 않도록 그 행만 뺀다.
   const benefits = benefitsRes.data.flatMap((row) => {
+    if (row.is_published !== true) return [];
     const parsed = benefitRowSchema.safeParse(row);
     if (!parsed.success) {
       console.error(`[benefits] 잘못된 혜택 행 제외: ${row.slug}`, parsed.error.issues);
