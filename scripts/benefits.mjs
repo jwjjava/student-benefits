@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { discoverBenefits, domainsSchema, reviewedBenefitsSql, summarizeRawResponse, todayInSeoul } from "./benefit-discovery.mjs";
@@ -51,6 +52,9 @@ async function run(command, args) {
     if (!apiKey) throw new Error("터미널의 OPENAI_API_KEY 환경 변수를 설정하세요.");
 
     const rawPath = values.raw ? rawPathFor(values.output) : null;
+    // API를 부르기 전에 확인한다. 끝난 뒤에 알면 토큰만 쓰고 결과를 못 남긴다.
+    const taken = [values.output, rawPath].filter((path) => path && existsSync(path));
+    if (taken.length) throw new Error(`출력 파일이 이미 있습니다: ${taken.join(", ")}\n다른 --output 경로를 지정하세요.`);
     const result = await discoverBenefits({
       apiKey, model: process.env.OPENAI_MODEL?.trim() || "gpt-5-mini",
       topic, domains: parsedDomains.data, limit, date,
