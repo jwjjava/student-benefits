@@ -116,6 +116,10 @@
 | `npm run typecheck` | 라우트 타입 생성(`next typegen`) 후 `tsc --noEmit` |
 | `npm test` | Vitest |
 | `npm run db:seed` | `supabase/sample-benefits.json` → `supabase/seed.sql` 생성 |
+| `npm run benefits:discover` | OpenAI 웹 검색으로 공식 도메인에서 혜택 후보를 찾아 검수용 JSON 생성 (`OPENAI_API_KEY` 필요) |
+| `npm run benefits:sql` | 검수 JSON에서 `reviewed: true`인 후보만 비공개 등록 SQL로 변환 |
+
+AI 혜택 수집 절차는 `docs/ai-benefit-discovery.md`에 있다. 결과 파일(`review/`, `benefits-review*.json`, `benefits-reviewed*.sql`)은 `.gitignore`로 커밋하지 않는다.
 
 ---
 
@@ -182,7 +186,11 @@ Supabase insert ◀── feedback/api.ts    ◀── 이용 여부 응답 · �
 .
 ├─ CLAUDE.md · AGENTS.md
 ├─ .env.example                       # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
-├─ scripts/generate-seed.mjs          # sample-benefits.json → seed.sql
+├─ docs/ai-benefit-discovery.md       # AI 혜택 후보 수집·검수 사용법
+├─ scripts/
+│  ├─ generate-seed.mjs               # sample-benefits.json → seed.sql
+│  ├─ benefits.mjs                    # benefits:discover / benefits:sql 명령
+│  └─ benefit-discovery.mjs           # OpenAI 검색 결과 검증·SQL 생성 (테스트: *.test.mjs)
 ├─ supabase/
 │  ├─ migrations/                     # 테이블 + RLS + benefit_popularity() + Storage 버킷
 │  ├─ sample-benefits.json            # Figma 시안 예시(검수 전). 샘플 모드 데이터
@@ -341,6 +349,7 @@ DB `events.name` 체크 제약과 `features/analytics/events.ts`가 같아야 �
 - `benefits`에는 **사람이 검수한 데이터만** 공개한다. Claude도 혜택 내용을 지어내 seed나 DB에 넣지 않는다.
 - `supabase/sample-benefits.json`은 Figma 시안 예시를 옮긴 것으로, 일부 링크는 `example.com` 자리표시다. 실제 공개 전에 팀이 검수해 대시보드에서 고친다.
 - 정보를 고치면 `verified_at`을 갱신한다. 형식이 잘못된 행은 목록에서 빠지고 서버 로그에 남는다.
+- AI 수집(`benefits:discover`) 결과는 후보일 뿐이다. 사람이 원문을 확인해 `reviewed: true`로 바꾼 것만 SQL로 만들고, 비공개로 들어간다. 비공개 혜택도 slug로 상세가 보이므로 검수 전 후보를 DB에 넣지 않는다. 스크립트가 DB에 직접 쓰거나 자동 공개하게 바꾸지 않는다.
 
 ### 테스트·검증
 
