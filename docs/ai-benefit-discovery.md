@@ -50,8 +50,32 @@ npm run benefits:discover -- --topic "한국 대학생 개발 도구" --domains 
 | `--domains` | ✓ | 검색을 허용할 **공식 도메인**, 쉼표로 구분 (최대 100개). 하위 도메인도 포함된다(`github.com` → `education.github.com`). 제공처·학교 공식 사이트만 넣는다. 블로그·커뮤니티·쿠폰 사이트는 넣지 않는다. |
 | `--limit` |  | 최대 후보 수, 1~10 (기본 5) |
 | `--output` | ✓ | 저장할 JSON 경로. **이미 있는 파일이면 덮어쓰지 않고 멈춘다.** 폴더는 미리 있어야 한다. |
+| `--raw` |  | OpenAI 원본 응답을 `<output 이름>.raw.json`에 함께 저장한다 (아래 참고) |
 
 `--help`를 붙이면 사용법이 나온다: `npm run benefits:discover -- --help`
+
+> Windows PowerShell에서 `npm.ps1 파일을 로드할 수 없습니다` 오류가 나면 `npm` 대신 `npm.cmd`로 실행한다. 예: `npm.cmd run benefits:discover -- ...`
+
+실행할 때마다 사용한 토큰 수가 터미널에 나온다.
+
+### 주고받은 내용 보기: `--raw`
+
+스크립트는 OpenAI에 `store: false`로 요청하므로 OpenAI 대시보드 Logs에는 대화 내용이 남지 않는다. 무엇을 검색했고 무엇을 받았는지 보려면 `--raw`를 붙인다.
+
+```powershell
+npm run benefits:discover -- --topic "..." --domains "..." --limit 2 --output "review/transport.json" --raw
+```
+
+`review/transport.raw.json`에 다음이 저장된다. 후보 검증이 실패해도 원본은 먼저 저장된다.
+
+| 필드 | 내용 |
+| --- | --- |
+| `usage` | 입력·출력 토큰 수 |
+| `searches` | AI가 실행한 검색어(`query`)와 열어 본 주소(`sources`) |
+| `candidates_before_filter` | 자동 필터 **전** 후보. 결과 JSON과 비교하면 어떤 후보가 왜 빠졌는지 알 수 있다 |
+| `response` | OpenAI 응답 원본 전체 |
+
+후보가 0건일 때 먼저 이 파일을 본다. `candidates_before_filter`도 비어 있으면 AI가 조건에 맞는 혜택을 못 찾은 것이고, 여기에는 있는데 결과에 없으면 자동 필터(아래)에 걸린 것이다.
 
 ### 자동으로 걸러지는 것
 
@@ -162,8 +186,10 @@ npm run benefits:sql -- --input "review/dev-tools.json" --output "review/dev-too
 | `--domains에 공식 도메인을 쉼표로 구분해 지정하세요.` | `https://`나 경로 없이 도메인만 쓴다. 예: `github.com,jetbrains.com` |
 | `출력 파일이 이미 있습니다.` | `--output`에 새 파일 이름 지정 |
 | `ENOENT: no such file or directory` | `--input` 경로 확인, 또는 `--output` 폴더(`review/`)를 먼저 만든다 |
-| `OpenAI API 요청 실패 (HTTP 401)` | 키가 틀렸거나 만료됨 |
-| `OpenAI API 요청 실패 (HTTP 429)` | 사용량 한도·요금 확인 후 잠시 뒤 재시도 |
+| `npm.ps1 파일을 로드할 수 없습니다` | PowerShell 실행 정책. `npm` 대신 `npm.cmd`로 실행 |
+| `OpenAI API 요청 실패 (HTTP 401) invalid_api_key` | 키가 틀렸거나 만료됨 |
+| `OpenAI API 요청 실패 (HTTP 429) insufficient_quota` | API 크레딧 없음. platform.openai.com Billing에서 충전 (ChatGPT 구독과 별개) |
+| `OpenAI API 요청 실패 (HTTP 429) rate_limit_exceeded` | 분당 토큰 한도(TPM) 초과. 1분쯤 기다리고, `--limit`과 `--domains`를 줄여 나눠 실행 |
 | `OpenAI 응답이 완료되지 않았습니다.` / `완료된 검색 결과가 없습니다.` | 주제를 좁히거나 `--limit`을 줄여 다시 실행 |
 | `검수 완료(reviewed: true)로 표시된 후보가 없습니다.` | 2단계에서 확인한 항목을 `true`로 바꾼다 |
 
