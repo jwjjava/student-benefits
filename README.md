@@ -58,6 +58,8 @@ http://localhost:3000 을 엽니다.
 
 ### AI로 새 혜택 후보 찾기
 
+단계별 사용법과 주의 사항은 [docs/ai-benefit-discovery.md](docs/ai-benefit-discovery.md)에 있습니다.
+
 팀 운영자가 로컬 터미널에서 실행합니다. OpenAI API 키는 터미널의 `OPENAI_API_KEY` 환경 변수에 설정합니다. 웹 검색을 지원하는 다른 모델은 `OPENAI_MODEL`로 지정할 수 있습니다(기본값 `gpt-5-mini`).
 
 ```sh

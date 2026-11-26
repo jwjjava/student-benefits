@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI 혜택 수집 결과(검수용 JSON·등록 SQL). docs/ai-benefit-discovery.md 참고
+/review/
+/benefits-review*.json
+/benefits-reviewed*.sql
