@@ -40,6 +40,8 @@ http://localhost:3000 을 엽니다.
 | `npm run lint` | ESLint |
 | `npm run typecheck` | 라우트 타입 생성 후 타입 검사 |
 | `npm test` | Vitest 단위 테스트 |
+| `npm run benefits:discover` | 공식 출처를 검색해 AI 검수 후보 JSON 생성 |
+| `npm run benefits:sql` | 검수 완료 후보를 등록할 SQL 생성 |
 | `npm run db:seed` | `supabase/sample-benefits.json` → `supabase/seed.sql` 생성 |
 
 커밋 전에 `lint`, `typecheck`, `test`, `build`를 통과시켜 주세요.
@@ -53,6 +55,24 @@ http://localhost:3000 을 엽니다.
 3. 이미지는 Storage `benefit-images` 버킷에 올리고 공개 URL을 `image_url`/`logo_url`에 넣습니다.
 
 수정 내용은 배포 없이 최대 5분 안에 사이트에 반영됩니다. 테이블 구조를 바꿀 때는 대시보드가 아니라 `supabase/migrations/`에 SQL 파일을 추가합니다. 대시보드 권한이 필요하면 Supabase 조직 멤버 초대를 요청하세요.
+
+### AI로 새 혜택 후보 찾기
+
+팀 운영자가 로컬 터미널에서 실행합니다. OpenAI API 키는 터미널의 `OPENAI_API_KEY` 환경 변수에 설정합니다. 웹 검색을 지원하는 다른 모델은 `OPENAI_MODEL`로 지정할 수 있습니다(기본값 `gpt-5-mini`).
+
+```sh
+npm run benefits:discover -- --topic "한국 대학생 개발 도구" --domains "jetbrains.com,github.com" --limit 5 --output "benefits-review.json"
+```
+
+- `--domains`에는 제공처나 학교의 공식 도메인만 넣습니다. 검색에 등장한 공식 출처와 신청 링크가 모두 확인된 후보를 검수 파일에 기록합니다. `evidence`는 AI가 정리한 근거이므로 원문에서 사실을 확인합니다.
+- JSON에서 이용 대상·기간·이용 방법·링크 및 기존 혜택과의 중복을 확인한 항목만 `reviewed`를 `true`로 바꿉니다. 필요한 경우 해당 값도 바로잡습니다.
+- 아래 명령으로 등록 SQL을 만든 뒤 Supabase 대시보드의 SQL Editor에서 실행합니다. 같은 slug 또는 동일 제공처·제목이 이미 있으면 건너뜁니다.
+
+```sh
+npm run benefits:sql -- --input "benefits-review.json" --output "benefits-reviewed.sql"
+```
+
+이 명령들은 DB에 직접 쓰지 않습니다. 생성 SQL은 검수한 항목만 비공개 행으로 추가하며, 공개할 때는 기존 Table Editor 절차로 `verified_at`과 `is_published`를 설정합니다.
 
 ## 배포
 

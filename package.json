@@ -9,7 +9,9 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "db:seed": "node scripts/generate-seed.mjs"
+    "db:seed": "node scripts/generate-seed.mjs",
+    "benefits:discover": "node scripts/benefits.mjs discover",
+    "benefits:sql": "node scripts/benefits.mjs sql"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.2",
