@@ -102,7 +102,7 @@ function uniqueCandidates(candidates) {
   });
 }
 
-export async function discoverBenefits({ apiKey, model, topic, domains, limit, date }) {
+export async function discoverBenefits({ apiKey, model, topic, domains, limit, date, onResponse }) {
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -128,8 +128,71 @@ export async function discoverBenefits({ apiKey, model, topic, domains, limit, d
       input: JSON.stringify({ topic, today_in_seoul: date, maximum_candidates: limit }),
     }),
   });
-  if (!response.ok) throw new Error(`OpenAI API 요청 실패 (HTTP ${response.status})`);
-  return parseDiscoveryResponse(await response.json(), { topic, domains, limit, date });
+  if (!response.ok) throw new Error(await apiErrorMessage(response));
+  const body = await response.json();
+  // 검증·필터 전에 원본을 넘긴다. 후보가 왜 빠졌는지 확인할 때 쓴다(--raw).
+  await onResponse?.(body);
+  return parseDiscoveryResponse(body, { topic, domains, limit, date });
+}
+
+/** 원본 응답에서 사람이 확인할 부분만 추린다: 검색 기록, 필터 전 후보, 토큰 사용량. */
+export function summarizeRawResponse(response) {
+  const searches = [];
+  const texts = [];
+  for (const item of Array.isArray(response?.output) ? response.output : []) {
+    if (item.type === "web_search_call") {
+      searches.push({
+        status: item.status,
+        query: item.action?.query ?? null,
+        url: item.action?.url ?? null,
+        sources: (item.action?.sources ?? []).map((source) => source.url).filter(Boolean),
+      });
+    }
+    if (item.type !== "message") continue;
+    for (const part of item.content ?? []) if (part.type === "output_text") texts.push(part.text);
+  }
+  let candidates = null;
+  try {
+    candidates = JSON.parse(texts.join("")).candidates ?? null;
+  } catch {
+    // 형식이 깨진 응답은 response 원본에서 확인한다.
+  }
+  return {
+    status: response?.status ?? null,
+    model: response?.model ?? null,
+    usage: response?.usage ?? null,
+    searches,
+    candidates_before_filter: candidates,
+    response,
+  };
+}
+
+/** 자주 나오는 OpenAI 오류 코드에 대한 안내. 코드는 응답 본문의 error.code 또는 error.type이다. */
+const API_ERROR_HINTS = {
+  insufficient_quota: "API 크레딧이 없습니다. platform.openai.com의 Billing에서 결제 수단과 잔액을 확인하세요.",
+  rate_limit_exceeded: "요청이 너무 잦습니다. 1~2분 뒤 다시 실행하세요.",
+  invalid_api_key: "API 키가 올바르지 않습니다. OPENAI_API_KEY 값을 다시 확인하세요.",
+  model_not_found: "이 키로 쓸 수 없는 모델입니다. OPENAI_MODEL을 확인하세요.",
+};
+
+/** 오류 응답에서 원인을 뽑아 한 줄로 만든다. 본문이 JSON이 아니면 HTTP 상태만 보여 준다. */
+export async function apiErrorMessage(response) {
+  const base = `OpenAI API 요청 실패 (HTTP ${response.status})`;
+  let error;
+  try {
+    error = (await response.json())?.error;
+  } catch {
+    return base;
+  }
+  if (!error || typeof error !== "object") return base;
+
+  const code = [error.code, error.type].find((value) => typeof value === "string" && value) ?? "";
+  // 응답 메시지에 키 일부가 섞여 나올 수 있어 가린다.
+  const detail = typeof error.message === "string"
+    ? error.message.replace(/sk-[A-Za-z0-9_*-]+/g, "sk-***").replace(/\s+/g, " ").trim().slice(0, 300)
+    : "";
+  const hint = API_ERROR_HINTS[error.code] ?? API_ERROR_HINTS[error.type];
+  return [`${base}${code ? ` ${code}` : ""}`, detail, hint].filter(Boolean).join("\n");
 }
 
 export function parseDiscoveryResponse(response, { topic, domains, limit, date }) {

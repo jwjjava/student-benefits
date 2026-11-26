@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { discoverBenefits, parseDiscoveryResponse, reviewedBenefitsSql } from "./benefit-discovery.mjs";
+import {
+  apiErrorMessage,
+  discoverBenefits,
+  parseDiscoveryResponse,
+  reviewedBenefitsSql,
+  summarizeRawResponse,
+} from "./benefit-discovery.mjs";
 
 const date = "2026-11-26";
 const options = { topic: "대학생 혜택", domains: ["provider.example"], limit: 5, date };
@@ -93,5 +99,69 @@ describe("검수 완료 혜택 SQL", () => {
     const document = parseDiscoveryResponse(responseFor([timed]), options);
     document.candidates[0].reviewed = true;
     expect(() => reviewedBenefitsSql(document, "2026-11-27")).toThrow("기간");
+  });
+});
+
+describe("OpenAI 오류 안내", () => {
+  const errorResponse = (status, body) => new Response(typeof body === "string" ? body : JSON.stringify(body), { status });
+
+  it("크레딧 부족이면 오류 코드와 결제 안내를 함께 보여 준다", async () => {
+    const message = await apiErrorMessage(errorResponse(429, {
+      error: { message: "You exceeded your current quota.", type: "insufficient_quota", code: "insufficient_quota" },
+    }));
+    expect(message).toContain("HTTP 429");
+    expect(message).toContain("insufficient_quota");
+    expect(message).toContain("You exceeded your current quota.");
+    expect(message).toContain("Billing");
+  });
+
+  it("메시지에 섞인 API 키는 가린다", async () => {
+    const message = await apiErrorMessage(errorResponse(401, {
+      error: { message: "Incorrect API key provided: sk-proj-abc123****wxyz.", type: "invalid_request_error", code: "invalid_api_key" },
+    }));
+    expect(message).not.toContain("abc123");
+    expect(message).toContain("sk-***");
+    expect(message).toContain("OPENAI_API_KEY");
+  });
+
+  it("본문이 JSON이 아니면 HTTP 상태만 보여 준다", async () => {
+    await expect(apiErrorMessage(errorResponse(502, "Bad Gateway"))).resolves.toBe("OpenAI API 요청 실패 (HTTP 502)");
+  });
+
+  it("discoverBenefits가 실패 이유를 오류로 던진다", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(errorResponse(429, {
+      error: { message: "Rate limit reached.", type: "requests", code: "rate_limit_exceeded" },
+    })));
+    await expect(discoverBenefits({ ...options, apiKey: "test-key", model: "gpt-5-mini" }))
+      .rejects.toThrow("rate_limit_exceeded");
+  });
+});
+
+describe("원본 응답 저장(--raw)", () => {
+  it("필터 전에 원본 응답을 onResponse로 넘긴다", async () => {
+    const raw = responseFor([sample, { ...sample, slug: "unverified", apply_url: "https://provider.example/unknown" }]);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(raw))));
+    const onResponse = vi.fn();
+    const result = await discoverBenefits({ ...options, apiKey: "test-key", model: "gpt-5-mini", onResponse });
+    expect(onResponse).toHaveBeenCalledWith(raw);
+    expect(result.candidates).toHaveLength(1);
+  });
+
+  it("검색 기록과 필터 전 후보, 토큰 사용량을 추린다", () => {
+    const raw = { ...responseFor([sample]), model: "gpt-5-mini", usage: { total_tokens: 1234 } };
+    raw.output[0].action.query = "학생 할인";
+    const summary = summarizeRawResponse(raw);
+    expect(summary.usage).toEqual({ total_tokens: 1234 });
+    expect(summary.searches).toEqual([
+      { status: "completed", query: "학생 할인", url: null, sources: [sample.source_url] },
+    ]);
+    expect(summary.candidates_before_filter).toEqual([sample]);
+    expect(summary.response).toBe(raw);
+  });
+
+  it("형식이 깨진 응답도 원본은 남긴다", () => {
+    const summary = summarizeRawResponse({ status: "incomplete", output: [{ type: "message", content: [{ type: "output_text", text: "{" }] }] });
+    expect(summary.candidates_before_filter).toBeNull();
+    expect(summary.status).toBe("incomplete");
   });
 });
