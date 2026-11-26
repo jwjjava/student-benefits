@@ -49,9 +49,8 @@ export async function getDiscoveryCatalog(): Promise<Catalog> {
 }
 
 /**
- * 상세 화면용 혜택 하나. 공개 목록에 없으면 '내린 혜택'(검수 완료 후 비공개)인지 확인해
- * 종료된 혜택으로 돌려준다. 공유 링크로 들어온 사람이 404 대신 종료 안내를 보게 하기 위해서다.
- * 검수 전 초안은 null(404)이다.
+ * 상세 화면용 혜택 하나. 공개 목록에 없으면 비공개 혜택인지 확인해 종료된 혜택으로 돌려준다.
+ * 공유 링크로 들어온 사람이 404 대신 종료 안내를 보게 하기 위해서다. DB에 없는 slug만 null(404)이다.
  */
 export async function getBenefitBySlug(slug: string): Promise<BenefitView | null> {
   const { benefits, categories, isSample } = await getCatalog();

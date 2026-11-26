@@ -68,7 +68,7 @@ describe("공개 혜택 조회", () => {
     withdrawnRpc.mockClear();
   });
 
-  // 검수 완료 후 내린 혜택은 get_withdrawn_benefit이 돌려준다. 초안은 DB 함수가 걸러 빈 배열이다.
+  // 비공개 혜택은 get_withdrawn_benefit이 돌려준다. DB에 없는 slug는 빈 배열이다.
   const withdrawnRow = {
     ...publicRow,
     id: "5d2a8c1e-7b3f-4e6a-9c1d-2f4b6a8c0e12",
@@ -95,11 +95,11 @@ describe("공개 혜택 조회", () => {
     });
   });
 
-  it("검수 전 비공개 혜택(초안)은 상세 조회에서도 제외한다", async () => {
+  it("공개 조회 응답에 섞인 비공개 행은 목록에서 빼고, DB 함수가 없다고 하면 404", async () => {
     await expect(getBenefitBySlug("private-benefit")).resolves.toBeNull();
   });
 
-  it("공개했다가 내린 혜택은 상세에서 종료 상태로 보여 준다", async () => {
+  it("비공개 혜택은 상세에서 종료 상태로 보여 준다", async () => {
     const benefit = await getBenefitBySlug("withdrawn-benefit");
 
     expect(benefit).toMatchObject({ slug: "withdrawn-benefit", status: "closed", daysLeft: null });
