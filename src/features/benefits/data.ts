@@ -48,9 +48,53 @@ export async function getDiscoveryCatalog(): Promise<Catalog> {
   return { ...catalog, benefits: excludeClosed(catalog.benefits) };
 }
 
+/**
+ * 상세 화면용 혜택 하나. 공개 목록에 없으면 '내린 혜택'(검수 완료 후 비공개)인지 확인해
+ * 종료된 혜택으로 돌려준다. 공유 링크로 들어온 사람이 404 대신 종료 안내를 보게 하기 위해서다.
+ * 검수 전 초안은 null(404)이다.
+ */
 export async function getBenefitBySlug(slug: string): Promise<BenefitView | null> {
-  const { benefits } = await getCatalog();
-  return benefits.find((b) => b.slug === slug) ?? null;
+  const { benefits, categories, isSample } = await getCatalog();
+  const published = benefits.find((b) => b.slug === slug);
+  if (published) return published;
+  if (isSample || !SLUG_PATTERN.test(slug)) return null;
+
+  const withdrawn = await getWithdrawnBenefit(slug);
+  if (!withdrawn) return null;
+  return {
+    ...withdrawn,
+    categoryName: categories.find((c) => c.id === withdrawn.categoryId)?.name ?? "기타",
+    status: "closed",
+    daysLeft: null,
+    popularity: 0,
+  };
+}
+
+/** DB slug 제약과 같다. 형식이 틀린 주소로 DB를 부르거나 캐시를 늘리지 않는다. */
+const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+async function getWithdrawnBenefit(slug: string): Promise<Benefit | null> {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 300, expire: 86_400 });
+  cacheTag(CATALOG_TAG);
+
+  const supabase = createServerSupabase();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase.rpc("get_withdrawn_benefit", { p_slug: slug });
+  if (error) {
+    console.error("[benefits] 내린 혜택 조회 실패", error.message);
+    return null;
+  }
+  const row = data?.[0];
+  if (!row) return null;
+
+  const parsed = benefitRowSchema.safeParse(row);
+  if (!parsed.success) {
+    console.error(`[benefits] 잘못된 혜택 행 제외: ${row.slug}`, parsed.error.issues);
+    return null;
+  }
+  return parsed.data;
 }
 
 type Loaded = {
