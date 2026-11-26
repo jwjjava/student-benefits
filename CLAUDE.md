@@ -75,7 +75,7 @@
 ### 정책 (기획서에서 '미정'이던 것을 이렇게 정했다)
 
 - **종료된 혜택:** 목록·검색에서는 숨기고, 찜·최근 본 항목·상세 URL에서는 "종료" 표시와 비활성 버튼(`종료된 혜택이에요`)으로 보여 준다.
-- **내린 혜택(검수 완료 후 비공개):** `verified_at`이 있는데 `is_published = false`인 혜택은 목록·검색에서 숨기고, 상세 URL로 들어오면 종료된 혜택과 똑같이 보여 준다(`get_withdrawn_benefit()`). 검수 전 초안(`verified_at` 없음)은 상세에서도 404다.
+- **비공개 혜택:** `is_published = false`인 혜택은 검수 여부와 관계없이 목록·검색에서 숨기고, 상세 URL로 들어오면 종료된 혜택과 똑같이 보여 준다(`get_withdrawn_benefit()`, 팀 결정 2026-11-26). 그래서 slug를 아는 사람은 검수 전 초안도 볼 수 있다. 초안에 확인되지 않은 내용을 넣지 않는다. DB에 없는 slug만 404다.
 - **이용 여부 팝업:** 신청 링크를 누르고 3초 이상 지난 뒤 같은 상세로 돌아오면 한 번 묻는다(탭 단위 `sessionStorage`). '나중에 답할게요'는 `survey_dismiss`만 기록하고 다시 묻지 않는다. '네, 이용했어요'를 고르면 "원래 알고 있었나요?"를 이어서 묻는다(성공 기준용).
 - **가까운 순:** 매장 좌표(`latitude`, `longitude`)가 있는 혜택만 보여 준다. 위치를 거부·실패하면 한양대 ERICA 캠퍼스 기준.
 - **인기순:** 최근 30일 찜 + 외부 링크 클릭 수(`benefit_popularity()` 함수).
@@ -164,7 +164,7 @@ Supabase insert ◀── feedback/api.ts    ◀── 이용 여부 응답 · �
 | `survey_responses` | 이용 여부 응답 | `insert`만 |
 | `error_reports` | 오류 제보 | `insert`만 |
 | `benefit_popularity()` | 인기 점수 (security definer) | `execute` |
-| `get_withdrawn_benefit(slug)` | 내린 혜택 하나를 slug로 조회 (security definer, 초안 제외) | `execute` |
+| `get_withdrawn_benefit(slug)` | 비공개 혜택 하나를 slug로 조회 (security definer) | `execute` |
 | Storage `benefit-images` | 혜택 이미지·로고 (public) | 읽기 |
 
 - **혜택 편집:** 대시보드 Table Editor에서 한다. 새 혜택은 `is_published = false`로 넣고, 검수가 끝나면 `verified_at`을 채우고 `true`로 바꾼다(`verified_at` 없이는 공개할 수 없게 DB 제약이 걸려 있다).
