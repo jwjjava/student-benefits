@@ -248,6 +248,42 @@ export type Database = {
           score: number
         }[]
       }
+      get_withdrawn_benefit: {
+        Args: { p_slug: string }
+        Returns: {
+          apply_url: string
+          card_note: string
+          category_id: string
+          created_at: string
+          eligibility: string[]
+          end_date: string | null
+          id: string
+          image_url: string | null
+          is_always_open: boolean
+          is_published: boolean
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          place_name: string | null
+          provider: string
+          recommend_rank: number
+          slug: string
+          source_name: string
+          source_url: string
+          start_date: string | null
+          tags: string[]
+          title: string
+          updated_at: string
+          usage_method: string
+          verified_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "benefits"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       [_ in never]: never

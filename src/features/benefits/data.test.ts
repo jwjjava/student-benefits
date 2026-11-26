@@ -63,9 +63,23 @@ describe("공개 혜택 조회", () => {
           ? { eq }
           : { order: async () => ({ data: [], error: null }) },
       }),
-      rpc: async () => ({ data: [], error: null }),
+      rpc: withdrawnRpc,
     });
+    withdrawnRpc.mockClear();
   });
+
+  // 검수 완료 후 내린 혜택은 get_withdrawn_benefit이 돌려준다. 초안은 DB 함수가 걸러 빈 배열이다.
+  const withdrawnRow = {
+    ...publicRow,
+    id: "5d2a8c1e-7b3f-4e6a-9c1d-2f4b6a8c0e12",
+    slug: "withdrawn-benefit",
+    is_published: false,
+  };
+  const withdrawnRpc = vi.fn(async (fn: string, args?: { p_slug: string }) =>
+    fn === "get_withdrawn_benefit" && args?.p_slug === "withdrawn-benefit"
+      ? { data: [withdrawnRow], error: null }
+      : { data: [], error: null },
+  );
 
   it("홈·검색 카탈로그에는 공개된 미종료 혜택만 담는다", async () => {
     const { benefits } = await getDiscoveryCatalog();
@@ -81,7 +95,24 @@ describe("공개 혜택 조회", () => {
     });
   });
 
-  it("비공개 혜택은 상세 조회에서도 제외한다", async () => {
+  it("검수 전 비공개 혜택(초안)은 상세 조회에서도 제외한다", async () => {
     await expect(getBenefitBySlug("private-benefit")).resolves.toBeNull();
+  });
+
+  it("공개했다가 내린 혜택은 상세에서 종료 상태로 보여 준다", async () => {
+    const benefit = await getBenefitBySlug("withdrawn-benefit");
+
+    expect(benefit).toMatchObject({ slug: "withdrawn-benefit", status: "closed", daysLeft: null });
+    expect(withdrawnRpc).toHaveBeenCalledWith("get_withdrawn_benefit", { p_slug: "withdrawn-benefit" });
+  });
+
+  it("내린 혜택은 홈·검색 목록에는 나오지 않는다", async () => {
+    const { benefits } = await getDiscoveryCatalog();
+    expect(benefits.some((b) => b.slug === "withdrawn-benefit")).toBe(false);
+  });
+
+  it("형식이 틀린 주소는 DB를 부르지 않고 바로 404", async () => {
+    await expect(getBenefitBySlug("../Bad Slug")).resolves.toBeNull();
+    expect(withdrawnRpc).not.toHaveBeenCalledWith("get_withdrawn_benefit", expect.anything());
   });
 });
